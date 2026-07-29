@@ -68,8 +68,11 @@ function reproducirClic() {
 const firebaseConfig = {
   apiKey: "AIzaSyDLxEpqxKjWV0ldGvFey9nvuJ8aVqUA0VM",
   authDomain: "reaper-minijuegos.firebaseapp.com",
-  databaseURL: "https://reaper-minijuegos-default-rtdb.firebaseio.com/",
+  databaseURL: "https://reaper-minijuegos-default-rtdb.firebaseio.com",
   projectId: "reaper-minijuegos",
+  storageBucket: "reaper-minijuegos.firebasestorage.app",
+  messagingSenderId: "1071002365800",
+  appId: "1:1071002365800:web:35b457b413ea1e9fc230dd",
 };
 
 firebase.initializeApp(firebaseConfig);
