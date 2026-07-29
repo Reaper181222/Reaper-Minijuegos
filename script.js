@@ -1,5 +1,6 @@
 // =========================================================
 // REAPER — NO TE ABURRAS
+// posta que lo armé para no aburrirme yo primero, después vemos
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================================================
-   SONIDO DE CLIC (sintetizado, no usa archivos externos)
+   SONIDO DE CLIC (lo genero yo mismo con oscilador, ni un mp3 de por medio)
    ========================================================= */
 let audioCtx = null;
 
@@ -45,7 +46,8 @@ function reproducirClic() {
     osc.start();
     osc.stop(audioCtx.currentTime + 0.16);
   } catch (e) {
-    // Si el navegador bloquea audio, no pasa nada, seguimos sin sonido aunque re gil no aceptando audio.
+    // si el navegador me bloquea el audio no pasa nada, sigo sin sonido
+    // y listo, tampoco es para hacer drama
   }
 }
 
@@ -56,14 +58,15 @@ function reproducirClic() {
 /* =========================================================
    CONEXIÓN ENTRE PCs (Firebase Realtime Database)
    =========================================================
-   Antes esto usaba localStorage, que SOLO funciona dentro del
-   mismo navegador — por eso dos PCs en redes distintas nunca
-   se veían entre sí. Ahora las "salas" viven en una base de
-   datos en la nube, así que cualquier PC que entre a la misma
-   URL puede leer/escribir la misma sala.
+   antes esto tiraba de localStorage, que solo vive DENTRO de
+   cada navegador — por eso cuando probé con dos PCs en redes
+   distintas no se veían ni en pedo, cada una tenía su propia
+   cajita separada. ahora las "salas" están en la nube, así que
+   cualquier PC que entre a la misma URL lee y escribe la MISMA
+   sala. gracias Firebase, sos un capo.
 
-   Pegá acá los datos que te da Firebase (Configuración del
-   proyecto > Tus apps > app Web). Sin esto no va a andar.
+   ojo: sin pegar la config de acá abajo esto no arranca ni loco.
+   la sacás de Configuración del proyecto > Tus apps > app Web.
    ========================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDLxEpqxKjWV0ldGvFey9nvuJ8aVqUA0VM",
@@ -78,15 +81,18 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Cada página de juego declara su nombre en <body data-juego="...">.
-// Así las salas de Papa's Louie, Pokémon, etc. viven en ramas separadas
-// dentro de la misma base: salas/papas-louie/ABC123, salas/pokemon/XYZ789.
-// Si una página no declara data-juego, cae en "general".
+// cada página de juego dice quién es con <body data-juego="...">.
+// así las salas de Papa's Louie, Pokémon, lo que sea, quedan cada
+// una en su propia rama de la base y no se pisan entre sí:
+// salas/papas-louie/ABC123, salas/pokemon/XYZ789, etc.
+// si algún día me olvido de poner el data-juego en una página nueva,
+// cae en "general" y no explota nada, tranqui.
 const JUEGO_ACTUAL = document.body.dataset.juego || "general";
 
-// Un ID al azar por pestaña abierta, para identificar "soy yo" dentro
-// de la lista de jugadores de una sala (no es un login, es solo para
-// que Firebase sepa quién sigue presente y quién no).
+// un ID al azar por cada pestaña que abro, para que Firebase sepa
+// "este soy yo" dentro de la lista de jugadores de una sala. no es
+// ningún login ni nada, es solo para saber quién sigue ahí y quién
+// se rajó.
 function idJugador() {
   if (!window.__idJugador) {
     window.__idJugador = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2));
@@ -98,10 +104,11 @@ function refSala(codigo) {
   return db.ref(`salas/${JUEGO_ACTUAL}/${codigo}`);
 }
 
-// Me anoto como jugador presente en la sala y le pido a Firebase que,
-// si mi pestaña se cierra o pierdo la conexión, me borre solo — sin
-// que yo tenga que hacer nada. Cuando la lista de jugadores de la
-// sala queda en cero (los dos se fueron), borramos la sala entera.
+// me anoto como jugador presente en la sala y le aviso a Firebase:
+// "che, si se me corta la conexión o cierro la pestaña, borrame solo
+// de acá, no hace falta que yo avise nada". y cuando la sala se queda
+// sin nadie (los dos jugadores se fueron), la borro entera. re prolijo
+// todo, ni un cuarto vacío dando vueltas.
 function unirseComoJugador(codigo) {
   const miPresencia = refSala(codigo).child("jugadores").child(idJugador());
   miPresencia.set(true);
@@ -114,10 +121,12 @@ function unirseComoJugador(codigo) {
   });
 }
 
-// Barrido de salas viejas y abandonadas (por si los dos jugadores se
-// desconectaron a la vez y nadie quedó para disparar el borrado de
-// arriba). Se ejecuta cada vez que alguien crea una sala nueva, así
-// no hace falta un servidor aparte corriendo todo el tiempo.
+// por si las moscas: si los dos jugadores cierran todo re al mismo
+// tiempo, puede que no quede nadie mirando para disparar el borrado
+// de arriba y quede una sala vieja dando vueltas por la base. para
+// eso este barrido, que corre cada vez que alguien crea una sala
+// nueva y tira a la basura todo lo de más de 3 horas. nada de
+// servidor corriendo 24/7 solo para esto, sería un gil.
 const VIDA_MAXIMA_SALA_MS = 3 * 60 * 60 * 1000; // 3 horas
 
 async function limpiarSalasViejas() {
@@ -134,24 +143,27 @@ async function limpiarSalasViejas() {
   return Promise.all(borrados);
 }
 
-// Un personaje por entrada: nombre + UNA sola imagen + ajustes opcionales
-// de encuadre para el cuadradito de la grilla:
-//   zoom -> acerca la foto (1 = sin zoom). Probá de a 0.1.
-//   x    -> mueve la foto a los costados. Negativo = izquierda, positivo = derecha.
-//   y    -> mueve la foto arriba/abajo. Negativo = arriba, positivo = abajo.
-// Los tres son opcionales, se pueden usar en cualquier combinación, por
-// ejemplo: { nombre: "Cooper", img: "...", zoom: 1.6, x: -5, y: 10 }
-// (eso significa: acercar, correr un poco a la izquierda y bajar un poco).
-// Nada de esto toca la foto completa de la pantalla de selección.
+// un personaje por línea: nombre + UNA sola imagen + ajustes opcionales
+// para que quede bien encuadrado en el cuadradito de la grilla:
+//   zoom -> acerca la foto (1 = como viene, sin tocar nada). probá de a 0.1, no te vuelvas loco.
+//   x    -> corre la foto a los costados. negativo = izquierda, positivo = derecha.
+//   y    -> sube o baja la foto. negativo = arriba, positivo = abajo.
+// los tres son opcionales, los combinás como quieras, por ejemplo:
+// { nombre: "Cooper", img: "...", zoom: 1.6, x: -5, y: 10 }
+// (o sea: acercar un toque, correrlo a la izquierda y bajarlo un poco).
+// esto NO le hace nada a la foto grande de la pantalla de selección,
+// tranqui, ahí se ve entera siempre.
 //
-// El mismo archivo se usa recortado (cara, cuadrado) en la grilla
+// el mismo archivo se usa recortado (cara, cuadrado) en la grilla
 // y completo (sin recortar) en la pantalla de selección — el recorte
-// lo hace el CSS, no hace falta subir dos fotos por personaje.
+// lo hace el CSS solo, no hace falta subir dos fotos por personaje,
+// no seas gil y no te compliques.
 //
-// Para sumar/editar personajes: agregá o cambiá una línea acá.
-// Si el link es de una página de la wiki y no de la imagen directa,
-// no va a cargar — necesitás la URL que empieza con
-// "static.wikia.nocookie.net/.../images/...png".
+// para sumar o cambiar un personaje: agregás o editás una línea acá
+// y ya está, no hay que tocar nada más.
+// ojo con esto: si el link es de una página de la wiki y no de la
+// imagen posta, no va a cargar nunca — necesitás la URL que arranca
+// con "static.wikia.nocookie.net/.../images/...png", nada de wiki/File:.
 const PERSONAJES = [
   { nombre: "Papa Louie", img: "https://static.wikia.nocookie.net/scratchpad/images/c/c5/Papa_Louie_Style_B.png/revision/latest?cb=20200809203507" },
   { nombre: "Roy",        img: "https://static.wikia.nocookie.net/scratchpad/images/e/ee/Roy_Original.png/revision/latest?cb=20200809203515" },
@@ -204,19 +216,19 @@ function initJuegoPapasLouie() {
   const btnUnirse = document.getElementById("btn-unirse");
   const btnConectar = document.getElementById("btn-conectar");
 
-  // "seleccion" = eligiendo tu identidad todavía / "juego" = ya podés activar-desactivar
+  // "seleccion" = todavía estoy eligiendo quién soy / "juego" = ya elegí, ahora toca ir tildando sospechosos
   let modoJuego = "seleccion";
   let celdaEnRevision = null;
 
-  // Paso 1 -> Paso 2
+  // paso 1 -> paso 2, nada del otro mundo
   btn2j.addEventListener("click", () => {
     selectorModo.classList.add("oculto");
     pantallaRol.classList.remove("oculto");
   });
 
-  // Paso 2: elegir Host
+  // paso 2: elijo ser el host
   btnHost.addEventListener("click", async () => {
-    limpiarSalasViejas(); // no bloquea, corre en segundo plano
+    limpiarSalasViejas(); // esto corre solo, atrás, no bloquea nada
     const codigo = generarCodigo();
     await guardarSala(codigo, { creado: Date.now(), conectado: false });
     unirseComoJugador(codigo);
@@ -224,14 +236,14 @@ function initJuegoPapasLouie() {
     escucharConexionSala(codigo, estadoConexion, () => iniciarFaseSeleccion());
   });
 
-  // Paso 2: elegir Unirse
+  // paso 2: me quiero unir con un código
   btnUnirse.addEventListener("click", () => {
     pantallaRol.classList.add("oculto");
     pantallaUnirse.classList.remove("oculto");
     inputCodigo.focus();
   });
 
-  // Paso 2b: conectar con código
+  // paso 2b: le doy a conectar con el código que me pasaron
   btnConectar.addEventListener("click", async () => {
     const codigo = inputCodigo.value.trim().toUpperCase();
 
@@ -261,7 +273,7 @@ function initJuegoPapasLouie() {
     if (e.key === "Enter") btnConectar.click();
   });
 
-  // Confirmar identidad elegida (tick verde)
+  // confirmo la identidad que elegí (tick verde) — de acá no hay vuelta atrás, así que ojo
   btnConfirmar.addEventListener("click", () => {
     if (!celdaEnRevision) return;
     celdaEnRevision.classList.add("elegido");
@@ -271,7 +283,7 @@ function initJuegoPapasLouie() {
     celdaEnRevision = null;
   });
 
-  // Cancelar y elegir otra (x roja)
+  // me arrepentí, cancelo y elijo otro (x roja)
   btnCancelar.addEventListener("click", () => {
     cerrarPanelSeleccion();
     celdaEnRevision = null;
@@ -356,7 +368,7 @@ function escucharConexionSala(codigo, estadoConexionEl, alConectar) {
   });
 }
 
-/* --- Grilla de personajes --- */
+/* --- grilla de personajes, todo generado por código, ni un div a mano --- */
 
 function generarGrilla(contenedor, alHacerClic) {
   contenedor.innerHTML = "";
@@ -385,3 +397,4 @@ function generarGrilla(contenedor, alHacerClic) {
     contenedor.appendChild(celda);
   });
 }
+
