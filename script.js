@@ -1,5 +1,5 @@
 // =========================================================
-// REAPER — NO TE ABURRAS
+// REAPER
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================================================
-   SONIDO DE CLIC (sintetizado, no usa archivos externos)
+   SONIDO DE CLIC (sintetizado, no usa archivos externos porque alta paja buscar un sonidito nuevo)
    ========================================================= */
 let audioCtx = null;
 
@@ -45,7 +45,7 @@ function reproducirClic() {
     osc.start();
     osc.stop(audioCtx.currentTime + 0.16);
   } catch (e) {
-    // Si el navegador bloquea audio, no pasa nada, seguimos sin sonido aunque re gil no aceptando audio.
+    // Si el navegador bloquea audio, no pasa nada, seguimos sin sonido aunque re gil no aceptando audio
   }
 }
 
@@ -57,13 +57,12 @@ function reproducirClic() {
    CONEXIÓN ENTRE PCs (Firebase Realtime Database)
    =========================================================
    Antes esto usaba localStorage, que SOLO funciona dentro del
-   mismo navegador — por eso dos PCs en redes distintas nunca
+   mismo navegador, por eso dos PCs en redes distintas nunca
    se veían entre sí. Ahora las "salas" viven en una base de
    datos en la nube, así que cualquier PC que entre a la misma
-   URL puede leer/escribir la misma sala.
-
-   Pegá acá los datos que te da Firebase (Configuración del
-   proyecto > Tus apps > app Web). Sin esto no va a andar.
+   URL puede leer/escribir la misma sala. Básicamente para que
+   se pueda entrar en distintos links
+   
    ========================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDLxEpqxKjWV0ldGvFey9nvuJ8aVqUA0VM",
@@ -99,9 +98,9 @@ function refSala(codigo) {
 }
 
 // Me anoto como jugador presente en la sala y le pido a Firebase que,
-// si mi pestaña se cierra o pierdo la conexión, me borre solo — sin
+// si mi pestaña se cierra o pierdo la conexión, me borre solo sin
 // que yo tenga que hacer nada. Cuando la lista de jugadores de la
-// sala queda en cero (los dos se fueron), borramos la sala entera.
+// sala queda en cero (los dos se fueron), se borra la sala entera
 function unirseComoJugador(codigo) {
   const miPresencia = refSala(codigo).child("jugadores").child(idJugador());
   miPresencia.set(true);
@@ -117,7 +116,8 @@ function unirseComoJugador(codigo) {
 // Barrido de salas viejas y abandonadas (por si los dos jugadores se
 // desconectaron a la vez y nadie quedó para disparar el borrado de
 // arriba). Se ejecuta cada vez que alguien crea una sala nueva, así
-// no hace falta un servidor aparte corriendo todo el tiempo.
+// no hace falta un servidor aparte corriendo todo el tiempo, la idea
+// es no quedarme sin espacio en la base de datos xd
 const VIDA_MAXIMA_SALA_MS = 3 * 60 * 60 * 1000; // 3 horas
 
 async function limpiarSalasViejas() {
@@ -145,13 +145,9 @@ async function limpiarSalasViejas() {
 // Nada de esto toca la foto completa de la pantalla de selección.
 //
 // El mismo archivo se usa recortado (cara, cuadrado) en la grilla
-// y completo (sin recortar) en la pantalla de selección — el recorte
-// lo hace el CSS, no hace falta subir dos fotos por personaje.
-//
-// Para sumar/editar personajes: agregá o cambiá una línea acá.
-// Si el link es de una página de la wiki y no de la imagen directa,
-// no va a cargar — necesitás la URL que empieza con
-// "static.wikia.nocookie.net/.../images/...png".
+// y completo (sin recortar) en la pantalla de selección, ya que el recorte
+// lo hace el CSS, no hace falta subir dos fotos por personaje
+
 const PERSONAJES = [
   { nombre: "Papa Louie", img: "https://static.wikia.nocookie.net/scratchpad/images/c/c5/Papa_Louie_Style_B.png/revision/latest?cb=20200809203507" },
   { nombre: "Roy",        img: "https://static.wikia.nocookie.net/scratchpad/images/e/ee/Roy_Original.png/revision/latest?cb=20200809203515" },
@@ -261,7 +257,7 @@ function initJuegoPapasLouie() {
     if (e.key === "Enter") btnConectar.click();
   });
 
-  // Confirmar identidad elegida (tick verde)
+  // Confirmar pj elegido (tick verde)
   btnConfirmar.addEventListener("click", () => {
     if (!celdaEnRevision) return;
     celdaEnRevision.classList.add("elegido");
@@ -271,7 +267,7 @@ function initJuegoPapasLouie() {
     celdaEnRevision = null;
   });
 
-  // Cancelar y elegir otra (x roja)
+  // Cancelar y elegir otro (x roja)
   btnCancelar.addEventListener("click", () => {
     cerrarPanelSeleccion();
     celdaEnRevision = null;
