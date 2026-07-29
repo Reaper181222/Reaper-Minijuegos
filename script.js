@@ -66,7 +66,6 @@ function reproducirClic() {
    sala. gracias Firebase, sos un capo.
 
    ojo: sin pegar la config de acá abajo esto no arranca ni loco.
-   la sacás de Configuración del proyecto > Tus apps > app Web.
    ========================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDLxEpqxKjWV0ldGvFey9nvuJ8aVqUA0VM",
@@ -109,9 +108,16 @@ function refSala(codigo) {
 // de acá, no hace falta que yo avise nada". y cuando la sala se queda
 // sin nadie (los dos jugadores se fueron), la borro entera. re prolijo
 // todo, ni un cuarto vacío dando vueltas.
-function unirseComoJugador(codigo) {
+//
+// OJO ACÁ (esto me costó encontrarlo, quede como nota para el futuro):
+// tengo que ESPERAR a que el .set(true) se confirme en el servidor
+// ANTES de ponerme a escuchar cambios en "jugadores". si no espero,
+// el primer chequeo puede llegar antes de que el server sepa que
+// estoy ahí, ve la lista vacía, y me borra la sala recién creada
+// sin que nadie hiciera nada mal. un lío bárbaro para algo tan tonto.
+async function unirseComoJugador(codigo) {
   const miPresencia = refSala(codigo).child("jugadores").child(idJugador());
-  miPresencia.set(true);
+  await miPresencia.set(true);
   miPresencia.onDisconnect().remove();
 
   refSala(codigo).child("jugadores").on("value", (snap) => {
@@ -231,7 +237,7 @@ function initJuegoPapasLouie() {
     limpiarSalasViejas(); // esto corre solo, atrás, no bloquea nada
     const codigo = generarCodigo();
     await guardarSala(codigo, { creado: Date.now(), conectado: false });
-    unirseComoJugador(codigo);
+    await unirseComoJugador(codigo);
     mostrarBloqueJugador({ esHost: true, numeroJugador: 1, codigo });
     escucharConexionSala(codigo, estadoConexion, () => iniciarFaseSeleccion());
   });
@@ -263,7 +269,7 @@ function initJuegoPapasLouie() {
 
     mensajeError.classList.add("oculto");
     await marcarSalaConectada(codigo);
-    unirseComoJugador(codigo);
+    await unirseComoJugador(codigo);
 
     mostrarBloqueJugador({ esHost: false, numeroJugador: 2, codigo });
     iniciarFaseSeleccion();
@@ -397,4 +403,3 @@ function generarGrilla(contenedor, alHacerClic) {
     contenedor.appendChild(celda);
   });
 }
-
