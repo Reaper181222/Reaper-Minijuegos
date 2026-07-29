@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Quien Soy? Papa's Louie — Reaper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-juego="papas-louie">
+
+  <header class="menu menu-chico">
+    <div class="menu-fuego" aria-hidden="true"></div>
+    <div class="menu-contenido">
+      <h1 class="titulo-principal titulo-chico">¿Quien Soy? Papa's Louie</h1>
+    </div>
+  </header>
+
+  <main class="contenido pagina-juego">
+
+    <a href="index.html" class="btn-volver">← Volver al inicio</a>
+
+    <!-- PASO 1: elegir cantidad de jugadores -->
+    <section class="seccion-paso" id="selector-modo">
+      <h2 class="subtitulo">Elegí la modalidad</h2>
+      <div class="tabla-juegos">
+        <button class="btn-juego" id="btn-2j" type="button">
+          <span class="btn-texto">2 Jugadores</span>
+        </button>
+        <button class="btn-juego btn-deshabilitado" type="button" disabled>
+          <span class="btn-texto">4 Jugadores</span>
+          <span class="btn-subtexto">Aún no disponible</span>
+        </button>
+        <button class="btn-juego btn-deshabilitado" type="button" disabled>
+          <span class="btn-texto">6 Jugadores</span>
+          <span class="btn-subtexto">Aún no disponible</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- PASO 2: sos host o te unís -->
+    <section class="seccion-paso oculto" id="pantalla-rol">
+      <h2 class="subtitulo">¿Cómo entrás?</h2>
+      <div class="tabla-juegos">
+        <button class="btn-juego" id="btn-host" type="button">
+          <span class="btn-texto">Soy el Host (Jugador #1)</span>
+        </button>
+        <button class="btn-juego" id="btn-unirse" type="button">
+          <span class="btn-texto">Me uno con un código (Jugador #2)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- PASO 2b: ingresar código (solo jugador que se une) -->
+    <section class="seccion-paso oculto" id="pantalla-unirse">
+      <h2 class="subtitulo">Ingresá el código</h2>
+      <div class="form-codigo">
+        <input type="text" id="input-codigo" maxlength="6" placeholder="Ej: A3F9K2" autocomplete="off">
+        <button class="btn-juego" id="btn-conectar" type="button">
+          <span class="btn-texto">Conectar</span>
+        </button>
+      </div>
+      <p class="mensaje-error oculto" id="mensaje-error">No encontramos ese código. Probá de nuevo.</p>
+    </section>
+
+    <!-- PASO 3: bloque privado del jugador -->
+    <section class="bloque-jugador oculto" id="bloque-jugador">
+      <div class="etiqueta-jugador" id="etiqueta-jugador"></div>
+
+      <div class="codigo-host oculto" id="codigo-host">
+        <p>Pasale este código a la otra persona:</p>
+        <div class="codigo-grande" id="codigo-grande"></div>
+        <p class="estado-conexion" id="estado-conexion">Esperando a que se conecte…</p>
+      </div>
+
+      <p class="mensaje-seleccion oculto" id="mensaje-seleccion">
+        Hacé clic en el que elijas (no podrás cambiarlo)
+      </p>
+
+      <!-- Panel de selección de personaje: foto completa + nombre + confirmar -->
+      <div class="panel-seleccion oculto" id="panel-seleccion">
+        <img id="foto-seleccion" class="foto-seleccion" src="" alt="">
+        <p class="nombre-seleccion" id="nombre-seleccion"></p>
+        <p class="pregunta-listo">¿Estás listo?</p>
+        <div class="botones-confirmar">
+          <button type="button" class="btn-tick" id="btn-confirmar" aria-label="Confirmar selección">✔</button>
+          <button type="button" class="btn-x" id="btn-cancelar" aria-label="Cancelar selección">✘</button>
+        </div>
+      </div>
+
+      <div class="grilla oculto" id="grilla"></div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <p>¡Pasalo piola!</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
